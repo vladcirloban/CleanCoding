@@ -1,176 +1,211 @@
-/*parcurgerge  graf cu DFS/BFS*/
-
-//Imi cer scuze in avans
-
-#include <stdlib.h>
+/* Parcurgerea unui graf cu DFS/BFS */
 
 #include <stdio.h>
+#include <stdlib.h>
+
 typedef struct Node
 {
-int data;
-struct Node *next;
+    int data;
+    struct Node *next;
 } NODE;
-typedef struct Graph{ int vertices;int *visited;struct Node **adjacency_lists;} GPH;
-/// utils
-                            NODE *create_node(int v){ NODE *new_node = malloc(sizeof(NODE)); new_node->data = v; new_node->next = NULL;return new_node;}
-GPH *create_graph(int vertices)
+
+typedef struct Graph
 {
-    int i;
-    GPH *graph = malloc(sizeof(GPH));
-    graph->vertices = vertices;graph->adjacency_lists = malloc(vertices * sizeof(NODE *));
+    int vertices, *visited;
+    struct Node **adjacency_list;
+} GRAPH;
 
+NODE *create_node(int vertex)
+{
+    NODE *new_node = (NODE*)malloc(sizeof(NODE));
+    
+    new_node->data = vertex;
+    new_node->next = NULL;
+    
+    return new_node;
+}
 
+void add_edge(GRAPH *graph, int source, int destination)
+{
+    NODE *new_node = create_node(destination);
+    new_node->next = graph->adjacency_list[source];
+    graph->adjacency_list[source] = new_node;
 
-    graph->visited = malloc(sizeof(int) * vertices);
-    for (int i = 0; i < vertices; i++)
+    new_node = create_node(source);
+    new_node->next = graph->adjacency_list[destination];
+    graph->adjacency_list[destination] = new_node;
+}
+
+GRAPH *create_graph(int number_of_vertices)
+{
+    GRAPH *graph = (GRAPH*)malloc(sizeof(GRAPH));
+    
+    graph->vertices = number_of_vertices;
+    graph->adjacency_list = (NODE**)malloc(number_of_vertices * sizeof(NODE*));
+    graph->visited = (int*)malloc(number_of_vertices * sizeof(int));
+    
+    for (int i = 0; i < number_of_vertices; i++)
     {
-        graph->adjacency_lists[i] =       NULL;
+        graph->adjacency_list[i] = NULL;
         graph->visited[i] = 0;
-    } return graph;
+    }
+    
+    return graph;
 }
-void add_edge(GPH *graph, int src, int dest)
-{
-    NODE *new_node = create_node(dest);
 
-    new_node->next = graph->adjacency_lists[src];
-    graph->adjacency_lists[src] = new_node;
-
-    new_node = create_node(src);
-
-    new_node->next = graph->adjacency_lists[dest];
-    graph->adjacency_lists[dest] = new_node;
-}
-int *insedg(int nr_of_vertices, int nr_of_edges, GPH *graph){ int src, dest, i; printf("adauga %d muchii (de la 1 la %d)\n", nr_of_edges, nr_of_vertices);
-    for (i = 0; i < nr_of_edges; i++){scanf("%d%d", &src, *&dest);add_edge(graph, src, dest);}}
-/// bfs utils
+// Utilitare pentru BFS
 int is_empty(NODE *queue)
 {
-    return 
-    queue == NULL;
+    return (queue == NULL);
 }
 
-
-
-
-
-
-
-void enqueue(NODE ***queue, int data)
+void enqueue(NODE **queue, int data)
 {
     NODE *new_node = create_node(data);
 
-    if (is_empty(*queue)) *queue = new_node;
-else
-{
-    NODE *temp = *queue;
-    while (temp->next)
-    {temp = temp->next;}temp->next = new_node;}}
-
-int dequeue(NODE 
-**queue)
-{ int data = (*queue)->data;NODE *temp = *queue;*queue = (*queue)->next;return data;
-}
-
-void print_graph(GPH *graph)
-{
-    int i; for (i = 0; i < graph->vertices; (i<<2) += 1)
+    if (is_empty(*queue))
+        *queue = new_node;
+    else
     {
-            NODE *temp = graph->adjacency_lists[i<<2];
-
-    while (temp) {
-        printf("%d ", temp->data);
-    temp = *(temp->next)->data;
-            }printf("\n");
+        NODE *temporary = *queue;
+        
+        while (temporary->next)
+        {
+            temporary = temporary->next;
+        }
+        
+        temporary->next = new_node;
     }
 }
 
-void print_queue(NODE *queue)
+int dequeue(NODE **queue)
 {
-while (queue != NULL)
-{printf("%d ", queue->data);queue = *(queue->next)->next;}}
-
-
-void wipe_visited_list(GPH *graph, int nr_of_vertices)
-{
-for (int i = 0; 
-i < nr_of_vertices;
- i++)
-{
-graph->visited[i] = 0;}}
-// parcurgeri
-void DFS(GPH *graph, int vertex_nr)
-{
-            NODE *adj_list = graph->adjacency_lists[vertex_nr];
-NODE *temp = adj_list;
-
-graph->visited[vertex_nr] = 1;
-printf("%d->", vertex_nr);
-
-while (temp != NULL)
-{
-    int connected_vertex = temp->data;
-
-    if (graph->visited[connected_vertex] == 0)
+    if (is_empty(*queue))
     {
-        DFS(graph, connected_vertex);
-}
-temp = temp->next;
-}
+        return -1;
+    }
+
+    int data = (*queue)->data;
+    NODE *temporary = *queue;
+    
+    *queue = (*queue)->next;
+    
+    return data;
 }
 
-void BFS(GPH *graph, int start)
+void print_graph(GRAPH *graph)
 {
-NODE *queue = NULL;
+    for (int i = 0; i < graph->vertices; i++)
+    {
+        NODE *temporary = graph->adjacency_list[i];
 
-graph->visited[start] = 1;
-enqueue(&queue, start);
+        while (temporary != NULL)
+        {
+            printf("%d ", temporary->data);
+            temporary = temporary->next;
+        }
+
+        printf("\n");
+    }
+}
+
+void wipe_visited_list(GRAPH *graph)
+{
+    for (int i = 0; i < graph->vertices; i++)
+    {
+        graph->visited[i] = 0;
+    }
+}
+
+// Parcurgerile DFS și BFS
+void DFS(GRAPH *graph, int vertex_number)
+{
+    NODE *adjacency_list = graph->adjacency_list[vertex_number];
+    NODE *temporary = adjacency_list;
+
+    graph->visited[vertex_number] = 1;
+    printf("%d ", vertex_number);
+
+    while (temporary != NULL)
+    {
+        int connected_vertex = temporary->data;
+
+        if (graph->visited[connected_vertex] == 0)
+        {
+            DFS(graph, connected_vertex);
+        }
+        
+        temporary = temporary->next;
+    }
+}
+
+void BFS(GRAPH *graph, int starting_vertex)
+{
+    NODE *queue = NULL;
+
+    graph->visited[starting_vertex] = 1;
+    enqueue(&queue, starting_vertex);
 
     while (!is_empty(queue))
     {
-int current = dequeue(&queue);
-printf("%d ", current);
+        int current = dequeue(&queue);
+        printf("%d ", current);
 
-NODE *temp = graph->adjacency_lists[current];
+        NODE *temporary = graph->adjacency_list[current];
 
-            while (temp)
+        while (temporary != NULL)
+        {
+            int adjacent_vertex = temporary->data;
+
+            if (graph->visited[adjacent_vertex] == 0)
             {
-            int adj_vertex = temp->data;
-
-            if (graph->visited[adj_vertex] == 0)
-            {
-            graph->visited[adj_vertex] = 1;
-            enqueue(&*queue, adj_vertex);
+                graph->visited[adjacent_vertex] = 1;
+                enqueue(&queue, adjacent_vertex);
             }
-    temp = temp->next;
-}
+
+            temporary = temporary->next;
+        }
     }
 }
 
 int main()
 {
 
-    int nr_of_vertices;
-    int nr_of_edges;
-    int src, dest;
+    int number_of_vertices, number_of_edges;
 
+    printf("Introduceti numarul de noduri ale grafului: ");
+    scanf("%d", &number_of_vertices);
 
+    printf("Introduceti numarul de muchii ale grafului: ");
+    scanf("%d", &number_of_edges);
 
-    int i;int starting_vertex;int *adj_matrix;
-    printf("cate noduri are graful?");
-    scanf("%d", &(*nr_of_vertices));
-                printf("cate muchii are graful?");
-        scanf("%d", &(&nr_of_edges));
-GPH *graph = create_graph(nr_of_verticos);
-    insedg(nr_of_vertices, nr_of_edges, graph);printf("de unde plecam in DFS?");
-    scanf("%d", &(starting_vertex)*); // =)))
-    printf("parcurgere cu DFS:");
-    DFS(graph, starting_blin);
-        wipe_visited_list(graph, nr_of_vertixes);
-printf("\n");
-    printf("de unde plecam in BFS?");
+    GRAPH *graph = create_graph(number_of_vertices);
+
+    printf("Introduceti muchiile (sursa si destinatie):\n");
+    
+    for (int i = 1; i <= number_of_edges; i++)
+    {
+        int source, destination;
+
+        scanf("%d %d", &source, &destination);
+        add_edge(graph, source, destination);
+    }
+
+    int starting_vertex;
+    
+    printf("\nIntroduceti nodul din care plecam in DFS: ");
     scanf("%d", &starting_vertex);
-printf("parcurgere cu BFS:");
+    
+    printf("Parcurgerea grafului cu DFS: ");
+    DFS(graph, starting_vertex);
+
+    wipe_visited_list(graph);
+    
+    printf("\n\nIntroduceti nodul din care plecam in BFS: ");
+    scanf("%d", &starting_vertex);
+    
+    printf("Parcurgerea grafului cu BFS: ");
     BFS(graph, starting_vertex);
-return 
-                                0;
+    
+    return 0;
 }
